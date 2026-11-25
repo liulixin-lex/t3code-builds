@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
-      APP_VARIANT: development
+      APP_VARIANT: production
       ORG_GRADLE_PROJECT_reactNativeArchitectures: arm64-v8a
     steps:
       - name: Checkout without orphaned reference submodules
@@ -142,6 +142,8 @@ jobs:
           corepack enable
       - name: Install mobile dependencies
         run: pnpm install --frozen-lockfile --prefer-offline --filter=@t3tools/mobile...
+      - name: Configure public app settings
+        run: cp .env.example .env
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
@@ -151,10 +153,10 @@ jobs:
         run: pnpm exec expo prebuild --clean --platform android
       - name: Build APK
         working-directory: apps/mobile/android
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon assembleRelease
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: t3code-android-apk-arm64
-          path: apps/mobile/android/app/build/outputs/apk/debug/*.apk
+          name: t3code-android-apk-production-arm64
+          path: apps/mobile/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           compression-level: 0
