@@ -110,11 +110,15 @@ function xml(source: string, extension: string): XmlNode {
     stack.at(-1)!.children.push(node);
     stack.push(node);
   });
-  parser.on("closetag", () => {
+  parser.on("closetag", (tag) => {
     const node = stack.pop()!;
     const parent = stack.at(-1)!;
     if (odf && (node.name === "p" || node.name === "h")) collapseOdfWhitespace(node);
     if (
+      (extension === ".epub" &&
+        (stack[1] ?? node).name === "html" &&
+        Object.hasOwn(tag.attributes, "hidden") &&
+        !/^until-found$/i.test(String(tag.attributes.hidden))) ||
       (extension === ".docx" && node.name === "del") ||
       (extension === ".docx" &&
         node.name === "r" &&
@@ -254,7 +258,7 @@ function* paragraphs(node: XmlNode): Generator<TextPart, void> {
       yield "\n";
     } else {
       yield* paragraphs(child);
-      if (["li", "div", "section"].includes(child.name)) yield "\n";
+      if (["li", "div", "section", "dt", "dd"].includes(child.name)) yield "\n";
     }
   }
 }
